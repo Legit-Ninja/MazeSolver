@@ -1,15 +1,18 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <vector>
+#include <queue>
 
-using std::cout; using std::endl; using std::vector; using std::ifstream; using std::string;
-int possRow[] = { -1, 0 , 0, 1};        //arrays used to check around coordinates
-int possCol [] = { 0, -1, ,1, 0};
+using std::cout; using std::endl; using std::queue; using std::ifstream; using std::string;
+int possRow[] = { -1, 0, 0, 1};        //arrays used to check around coordinates/cells
+int possCol[] = { 0, -1, 1, 0};
 
 struct point //allows us to easily store coordinates
 { int x; int y; };
-struct info { }
+struct info {
+    point p;        //point associatd with the distance
+    int distance;   //distance from the start
+ };
 bool pathDetect(int maze[10][10], point p)
 {
     if ( maze[p.x][p.y] == 1 )
@@ -19,13 +22,42 @@ bool pathDetect(int maze[10][10], point p)
     return false;
 }
 
-void dijkstraAlgorithm(int maze[50][50], point curr, point dest, bool beenThere[10][10], int &steps)
+void dijkstraAlgorithm(int maze[10][10], point start, point dest, bool beenThere[10][10])
 {
-    beenThere[curr.x][curr.y] = true;
+    beenThere[start.x][start.y] = true;
+    queue<info> q;
+    info info_ = {start, 0}; // the first item in the queue will be the starting point, has distance 0
+    q.push(info_);
 
+    while (!q.empty())
+    {
+        info curr = q.front();      //keeps track of where we are currently 
+        point currPoint = curr.p;      
+
+        if (currPoint.x == dest.x && currPoint.y == dest.y )    //if we have reached teh destination
+        {
+            cout << "The shortest path is: " << curr.distance << endl;
+            return;
+        }
+
+        //if it's not the one we're looking for, get rid of it and go to the next item in the queue
+        q.pop();
+        for (int i = 0; i < 4; i++)     //checks the adjecent indexes for possible paths
+        {
+            int row = currPoint.x + possRow[i];
+            int col = currPoint.y + possCol[i];
+            if( pathDetect(maze, currPoint) && beenThere[row][col] != true)   //if it's a valid place and we haven't been there
+            {
+                beenThere[row][col] = true;     //marks the new cell
+                info nextCell = { {row, col}, curr.distance +1};    // adds the cell to the queue to be checked out for a possible solution
+                q.push(nextCell);
+            }
+        }
+    }
+    return;
 }
 //check if you can go right, go right, then if not left, then if not backwards 
-void wallAlgorithim(int maze[10][10], point start,  bool beenThere[10][10], int direction, int &steps)                 //direction is the index of the imaginary array that we came from.
+/*void wallAlgorithim(int maze[10][10], point start,  bool beenThere[10][10], int direction, int &steps)                 //direction is the index of the imaginary array that we came from.
 {
     if ( r < 0 || c < 0 || r > 10 || c > 10) { return; } 
     // for each possible direction minus where we came from
@@ -72,7 +104,7 @@ void wallAlgorithim(int maze[10][10], point start,  bool beenThere[10][10], int 
         }
             
     }
-}
+} */
 
 int main()
 {
@@ -95,7 +127,7 @@ int main()
     bool beenThere[10][10];
     std::fill(beenThere[0], beenThere[0] + 10 * 10, 0);       //initializes the beenThere array to all 0's
     int steps = 0;
-    wallAlgorithim(data, 0, 0, beenThere, -1, steps);
+  //  wallAlgorithim(data, 0, 0, beenThere, -1, steps);
 
 
     return 0;
