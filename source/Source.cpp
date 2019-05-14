@@ -34,10 +34,13 @@ bool pathDetect(int maze[10][10], Point current) {
 
 }
 
-void wallAlgorithm(int maze[10][10], Point current, Point end, bool beenThere[10][10], int direction, int &steps)
+bool wallAlgorithm(int maze[10][10], Point current, Point end, bool beenThere[10][10], int direction, int &steps)
 {
+	cout << "row: " << current.x << " column: " << current.y << "\n";
+	beenThere[current.x][current.y] = true;
 	if (current.x == end.x && current.y == end.y)
-		return;
+		return true;
+	int pathCount = 0;
 	for (int i = 0; i < 4; i++)				//this loop looks at the possible directions
 	{
 		if (i != direction)
@@ -45,19 +48,26 @@ void wallAlgorithm(int maze[10][10], Point current, Point end, bool beenThere[10
 			//0 - going east
 			//1 - going north
 			//2 - going west
-			//3 - ggoing south
-			double row = std::sin(3.1415* i / 2);
-			double col = std::cos(3.1415* i / 2)*(-1);
+			//3 - going south
+			double row = std::sin(3.1415* i / 2)*(-1.5);			//it was supposed to be multiplied by -1 but some of
+																	//the answers came out to be -0.999999 which was read as 0 instead of -1
+			double col = std::cos(3.1415* i / 2);
 			//the above two lines of code converts the direction into rows and columns to increase
 			Point newPoint(current.x + (int)row, current.y + (int)col);
-			if (pathDetect(maze,newPoint))
+			if (pathDetect(maze,newPoint) && !beenThere[newPoint.x][newPoint.y])
 			{
 				steps++;
-				wallAlgorithm(maze, newPoint, end, beenThere, i, steps);
+				if (wallAlgorithm(maze, newPoint, end, beenThere, (2 + i) % 4, steps))				//2+i mod 4 gives the opposite direction (if going east - 0, returns west - 2)
+				{
+					cout << "RETURNED TRUE\n";
+					return true;
+				}
+				else
+					steps++;
 			}
 		}
 	}
-	return;
+	return false;
 }
 
 void dijkstraAlgorithm(int maze[10][10], Point start, Point dest, bool beenThere[10][10])
@@ -84,7 +94,7 @@ void dijkstraAlgorithm(int maze[10][10], Point start, Point dest, bool beenThere
 		{
 			int row = currPoint.x + possRow[i];
 			int col = currPoint.y + possCol[i];
-			if (pathDetect(maze, currPoint) && beenThere[row][col] != true)   //if it's a valid place and we haven't been there
+			if (pathDetect(maze, currPoint) && !beenThere[row][col])   //if it's a valid place and we haven't been there
 			{
 				beenThere[row][col] = true;     //marks the new cell
 				info nextCell = { {row, col}, curr.distance + 1 };    // adds the cell to the queue to be checked out for a possible solution
@@ -124,15 +134,29 @@ int main()
 	else
 	{
 		cout << "Unable to read the file\n";
-		terminate();
+		return -1;
 	}
 
 	int steps = 0;
 	Point start(4, 0);
 	Point dest(6, 2);
-	//wallAlgorithm(maze, start, dest, beenThere, -1, steps);
-	//cout << "Wall Algorithm: " << steps;
-	dijkstraAlgorithm(maze, start, dest, beenThere);
+	if (wallAlgorithm(maze, start, dest, beenThere, -1, steps))
+		cout << "Wall Algorithm: " << steps << "\n";
+	else
+		cout << "There is no solution\n";
+
+
+	//displaying and resetting the bool array
+	cout << "\n\n";
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < 10; j++)
+		{
+			cout << beenThere[i][j];
+		}
+		cout << "\n";
+	}
+
+	//dijkstraAlgorithm(maze, start, dest, beenThere);
 	return 0;
 }
-
