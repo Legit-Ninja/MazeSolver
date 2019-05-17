@@ -12,8 +12,12 @@
 
 #include <iostream>
 #include <queue>
+#include <chrono>
+#include <thread>
+#include <conio.h>
 
 #include "Detector.h"
+#include "Visualization.h"
 
 using std::cout;
 using std::queue;
@@ -30,14 +34,23 @@ void dijkstraAlgorithm(bool maze[rowSize][colSize], Point start, Point dest, boo
 	info info_ = { start, 0 }; // the first item in the queue will be the starting point, has distance 0
 	q.push(info_);
 
+	char input;
+
 	while (!q.empty())
 	{
 		info curr = q.front();      //keeps track of where we are currently 
 		Point currPoint = curr.p;
 
-		if (currPoint.x == dest.x && currPoint.y == dest.y)    //if we have reached teh destination
+		if (currPoint.x == dest.x && currPoint.y == dest.y)    //if we have reached the destination
 		{
+			//visual
+				std::this_thread::sleep_for(std::chrono::milliseconds(milliSec));
+				if (!stopGraphics)
+					show(maze, currPoint, dest);
+			//visual end
+
 			cout << "The shortest path is: " << curr.distance << endl;
+			stopGraphics = true;
 			return;
 		}
 
@@ -49,6 +62,24 @@ void dijkstraAlgorithm(bool maze[rowSize][colSize], Point start, Point dest, boo
 			int col = currPoint.y + possCol[i];
 			if (pathDetect(maze, currPoint) && !beenThere[row][col])   //if it's a valid place and we haven't been there
 			{
+				//visual
+				if (flow)
+				{
+					std::this_thread::sleep_for(std::chrono::milliseconds(milliSec));
+					if (!stopGraphics)
+						show(maze, currPoint, dest);
+				}
+				else
+				{
+					cout << "Press a key to take a step\n";
+					input = getch();
+					if (input == 'f')
+						flow = true;
+					if (!stopGraphics)
+						show(maze, currPoint, dest);
+				}
+				//visual end
+
 				beenThere[row][col] = true;     //marks the new cell
 				info nextCell = { {row, col}, curr.distance + 1 };    // adds the cell to the queue to be checked out for a possible solution
 				q.push(nextCell);

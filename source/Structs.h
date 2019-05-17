@@ -11,6 +11,8 @@
 const int rowSize = 15;
 const int colSize = 30;
 
+const int milliSec = 400;
+
 struct Point {
 	int x;
 	int y;
